@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+quiz_master.db
+.pytest_cache/
+.env
+venv/
+.venv/

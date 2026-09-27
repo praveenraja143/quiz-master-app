@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuizMaster Arena • Gamified Tech Challenge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Canvas Confetti Overlay -->
+  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
+  <div class="space-ambient"></div>
+  <div class="grid-mesh"></div>
+
+  <div class="arena-wrapper">
+    <!-- ARENA TOP BAR -->
+    <header class="arena-header glass-card">
+      <div class="brand">
+        <div class="brand-badge">
+          <i class="fa-solid fa-gamepad"></i>
+        </div>
+        <div>
+          <h1>QuizMaster<span>Arena</span></h1>
+          <p class="tagline">Competitive Timed Tech Challenges</p>
+        </div>
+      </div>
+
+      <div class="header-tools">
+        <button class="btn btn-secondary" onclick="showLeaderboardModal()">
+          <i class="fa-solid fa-trophy mr-1 text-gold"></i>
+          <span>Leaderboard</span>
+        </button>
+        <button id="soundToggleBtn" class="btn btn-secondary btn-icon-only" onclick="toggleAudio()" title="Sound Effects">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- SCREEN 1: LOBBY / SETUP SCREEN -->
+    <section id="lobbyScreen" class="arena-screen">
+      <div class="lobby-card glass-card">
+        <div class="lobby-welcome">
+          <div class="trophy-glow"><i class="fa-solid fa-bolt"></i></div>
+          <h2>Ready to Test Your Knowledge?</h2>
+          <p class="text-muted">Choose your battle track, beat the timer, and claim your spot on the hall of fame.</p>
+        </div>
+
+        <div class="form-group mb-4">
+          <label for="playerNameInput"><i class="fa-solid fa-user-astronaut mr-1 text-cyan"></i> Player Name / Codename</label>
+          <input type="text" id="playerNameInput" placeholder="Enter player tag (e.g. Praveen)" value="Praveen">
+        </div>
+
+        <div class="category-selection-section">
+          <label class="section-label"><i class="fa-solid fa-layer-group mr-1 text-cyan"></i> Select Challenge Track</label>
+          <div class="category-grid" id="categoryCards">
+            <!-- Dynamically populated categories -->
+          </div>
+        </div>
+
+        <div class="lobby-footer">
+          <button class="btn btn-primary btn-glow btn-lg btn-block" onclick="startQuiz()">
+            <i class="fa-solid fa-play mr-2"></i> Start Challenge
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 2: ACTIVE QUIZ PLAYGROUND -->
+    <section id="quizScreen" class="arena-screen hidden">
+      <div class="quiz-card glass-card">
+        <!-- QUIZ STATS BAR -->
+        <div class="quiz-status-bar">
+          <div class="status-left">
+            <span class="track-tag" id="activeTrackBadge">Python</span>
+            <span class="q-progress-text" id="qProgressText">Question 1 / 5</span>
+          </div>
+
+          <div class="status-center">
+            <!-- CIRCULAR TIMER -->
+            <div class="timer-box">
+              <i class="fa-regular fa-clock timer-icon"></i>
+              <span id="timerCountdown">15</span>s
+            </div>
+          </div>
+
+          <div class="status-right">
+            <div class="lifelines">
+              <button id="btnLifeline50" class="btn-lifeline" onclick="useLifeline50()" title="50-50 Lifeline">
+                50:50
+              </button>
+            </div>
+            <div class="live-score-box">
+              <i class="fa-solid fa-star text-gold"></i>
+              <span id="liveScore">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROGRESS BAR -->
+        <div class="track-progress-bar">
+          <div id="progressTrackFill" class="track-fill"></div>
+        </div>
+
+        <!-- QUESTION BOX -->
+        <div class="question-container">
+          <h2 id="questionPrompt" class="question-prompt">Loading question...</h2>
+        </div>
+
+        <!-- OPTIONS GRID -->
+        <div class="options-grid" id="optionsGrid">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- FOOTER TIP -->
+        <div class="quiz-footer">
+          <span class="shortcut-tip"><i class="fa-regular fa-keyboard mr-1"></i> Tip: Use number keys [1-4] on keyboard for speed!</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN 3: RESULTS & VICTORY SCREEN -->
+    <section id="resultsScreen" class="arena-screen hidden">
+      <div class="results-card glass-card">
+        <div class="results-header">
+          <div class="score-circle-wrapper">
+            <div class="score-circle" id="scoreCircle">
+              <span class="final-score" id="resScore">5</span>
+              <span class="score-divider">/</span>
+              <span class="total-score" id="resTotal">5</span>
+            </div>
+          </div>
+          <h2 id="resTitle">Outstanding Performance!</h2>
+          <p id="resSubtitle" class="text-muted">You mastered this challenge with high accuracy.</p>
+        </div>
+
+        <!-- PERFORMANCE TILES -->
+        <div class="perf-grid">
+          <div class="perf-tile">
+            <span class="perf-label">Accuracy</span>
+            <h4 class="perf-value text-cyan" id="resAccuracy">100%</h4>
+          </div>
+          <div class="perf-tile">
+            <span class="perf-label">Time Taken</span>
+            <h4 class="perf-value" id="resTime">18.4s</h4>
+          </div>
+          <div class="perf-tile">
+            <span class="perf-label">Speed Rating</span>
+            <h4 class="perf-value text-gold" id="resRating">⚡ Lightning</h4>
+          </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="results-actions">
+          <button class="btn btn-secondary" onclick="toggleReviewSection()">
+            <i class="fa-solid fa-clipboard-check mr-1"></i> Review Answers
+          </button>
+          <button class="btn btn-secondary" onclick="showLeaderboardModal()">
+            <i class="fa-solid fa-trophy mr-1 text-gold"></i> Hall of Fame
+          </button>
+          <button class="btn btn-primary btn-glow" onclick="playAgain()">
+            <i class="fa-solid fa-rotate-right mr-1"></i> Play Again
+          </button>
+        </div>
+
+        <!-- REVIEW SECTION (TOGGLEABLE) -->
+        <div id="reviewContainer" class="review-section hidden">
+          <h3 class="review-heading"><i class="fa-solid fa-list-check mr-1 text-cyan"></i> Question-by-Question Breakdown</h3>
+          <div id="reviewList" class="review-cards-list"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- LEADERBOARD MODAL -->
+  <div id="leaderboardModal" class="modal-backdrop hidden">
+    <div class="modal-card glass-card">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-trophy text-gold mr-2"></i> Global Hall of Fame</h2>
+        <button class="btn-close" onclick="closeLeaderboardModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="arena-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Track</th>
+                <th>Score</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardTbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="closeLeaderboardModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
